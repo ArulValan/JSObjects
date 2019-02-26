@@ -1,69 +1,101 @@
-Employee = function (Name, Age, EmployeeID) {
-    this.Name = Name; this.Age = Age; this.EmployeeID = EmployeeID;
-}
 
-Department = function (DepartMentID, DepartmentName) {
-    this.DepartmentID = DepartMentID; this.DepartmentName = DepartmentName; this.Members = []
-}
+// Start the main app logic.
+define(["C:\\Users\\ArulVC\\Desktop\\my_env\\JS\\JSObjects\\Department.js", "C:\\Users\\ArulVC\\Desktop\\my_env\\JS\\JSObjects\\Employee.js"],
+    function (Department, Employee) {
+        window.Department = Department;
+        window.Employee = Employee;
+        Company = function (CompanyName) {
+            this.CompanyName = CompanyName;
+            this.Employees = [];
+            this.Departments = [];
 
-Company = function (CompanyName) {
-
-    this.CompanyName = CompanyName;
-    this.Employees = [];
-    this.Departments = [];
-
-    this.AddEmployee = function (name, age, employeeID) {
-        DuplicateEmployee = this.Employees.filter(function (Employee) {
-            return (!(Employee.Name == name || Employee.EmployeeID == employeeID))
-        })
-        if (DuplicateEmployee != null) {
-            this.Employees.push(new Employee(Name, Age, EmployeeID));
-        }
-    };
-
-    this.RemoveEmployee = function (Name, Age, EmployeeID) {
-        this.Employees = this.Employees.filter(function (Employee) {
-            return (!(Employee.Name == Name || Employee.EmployeeID == EmployeeID))
-        })
-        this.Departments = this.Departments.map(function (Department) {
-            Department.Members=Department.Members.filter(function (DepartmentMember) {
-                return (!(DepartmentMember.Name == Name || DepartmentMember.DepartMentID == EmployeeID))
-            })[0]
-            return Department
-        })
-    };
-
-    this.AddDepartment = function (DepartmentID, DepartmentName) {
-        DuplicateDepartment = this.Departments.filter(function (Department) {
-            return (Department.DepartmentID == DepartmentID || Department.DepartmentName == DepartmentName)
-        })[0]
-        if (DuplicateDepartment == null) {
-            // var CreatedEmployee = new Employee(Name, Age, EmployeeID)
-            this.Departments.push(new Department(DepartmentID, DepartmentName))
-        }
-    };
-
-    this.AssignToDepartment = function (Name, Age, EmployeeID, DepartmentID, DepartmentName) {
-        Sucessfull = false;
-        this.Departments.map(function (Department) {
-            if (DepartmentID == Department.DepartMentID || DepartmentName == DepartmentName) {
-                var targetDepartment = this.Employees.filter(function (Employee) {
-                    return (Employee.Name == Name || Employee.EmployeeID == EmployeeID)
+            this.AddEmployee = function (givenEmployee) {
+                var duplicateEmployee = this.Employees.filter(function (employee) {
+                    return (employee.Name == givenEmployee.Name || employee.EmployeeID == givenEmployee.EmployeeID);
                 })[0];
-                if (targetDepartment != null) { Department.Members.push(targetDepartment); Sucessfull = true; }
+                if (duplicateEmployee === undefined) {
+                    this.Employees.push(givenEmployee);
+                }
+                else {
+                    console.log("Employee " + givenEmployee.Name + "  " + givenEmployee.EmployeeID + " Already Exists.");
+                }
+            };
+
+            this.RemoveEmployee = function (givenEmployeeID) {
+                var employeePosition = undefined;
+                this.Employees.some(function (employee, index) {
+                    if (employee.EmployeeID == givenEmployeeID) { employeePosition = index; return true; }
+                });
+                if (employeePosition === undefined) { console.log("Employee with Employee ID " + givenEmployeeID + " Could not be Found."); }
+                else { this.Employees.splice(employeePosition, 1); }
+                this.Departments = this.Departments.map(function (department) {
+                    if (department.Members != undefined)
+                        department.Members = department.Members.filter(function (departmentMember) {
+                            return (!(departmentMember.DepartMentID == givenEmployeeID));
+                        })[0];
+                    return department;
+                });
+            };
+
+            this.AddDepartment = function (givenDepartment) {
+                var duplicateDepartment = this.Departments.filter(function (department) {
+                    return (department.DepartmentID == givenDepartment.DepartmentID || department.DepartmentName == givenDepartment.DepartmentName);
+                })[0];
+                if (duplicateDepartment == null) {
+                    this.Departments.push(givenDepartment);
+                }
+                else { console.log("Department with ID " + givenDepartment.DepartmentID + " Already Exists"); }
+            };
+
+            this.AssignToDepartment = function (givenEmployeeID, givenDepartmentID) {
+                var departments = this.Departments;
+                var employees = this.Employees;
+                var targetDepartment = undefined;
+                var employeeAlreadyAssigned = false;
+                departments.some(function (department, index) {
+                    if (department.DepartmentID == givenDepartmentID) {
+                        department.Members.some(function (departmentMember) {
+                            if (departmentMember.EmployeeID == givenEmployeeID) { employeeAlreadyAssigned = true; }
+                        });
+                        targetDepartment = index;
+                        return true;
+                    }
+                });
+                if (employeeAlreadyAssigned) {
+                    console.log("Employee is already added to department.");
+                    return false;
+                }
+                if (targetDepartment === undefined) {
+                    console.log("Department with given ID " + givenDepartmentID + " cannot be Found.");
+                    return false;
+                }
+                else {
+                    var targetEmployee = undefined;
+                    employees.some(function (employee, index) {
+                        if (employee.EmployeeID == givenEmployeeID) { targetEmployee = index; return true; }
+                    });
+                    if (targetEmployee === undefined) {
+                        console.log("Employee with given ID " + givenEmployeeID + " cannot be Found."); return false;
+                    }
+                    else {
+                        departments[targetDepartment].Members
+                            .push(employees[targetEmployee]); return true;
+                    }
+                };
             }
-        }.bind(this))
-        return Sucessfull;
-    }
 
-    this.GetAllEmployees= function(){
-        return this.Employees;
-    }
+            this.GetAllEmployees = function () {
+                return this.Employees;
+            }
 
-    this.RemoveDepartment = function (DepartmentID, DepartmentName) {
-        this.Departments = this.Departments.filter(function (Department) {
-            return (!(Department.DepartmentID == DepartmentID || Department.DepartmentName == DepartmentName))
-        })
-    };
-    
-}
+            this.RemoveDepartment = function (departmentID) {
+                var removedFlag = false;
+                this.Departments = this.Departments.filter(function (Department) {
+                    if (Department.DepartmentID == departmentID) { removedFlag = true; }
+                    return (!(Department.DepartmentID == departmentID));
+                })
+                if (removedFlag == false) { console.log("Department with Department ID " + departmentID + " Doesn't Exist."); }
+            };
+
+        }
+    });
